@@ -26,15 +26,15 @@ class AnomalyReader(object):
           df_split = pd.read_csv(os.path.join(self.dataset_folder, "train/pairs_train.tsv"), sep='\t')
 
           # Normal
-          s1 = df_split.loc[:,'message_cleaned_x'].values
+          s1 = df_split.loc[:,'txt_x'].values
           s1 = list(s1)
 
           # Anomaly
-          s2 = df_split.loc[:, 'message_cleaned_y'].values
+          s2 = df_split.loc[:, 'txt_y'].values
           s2 = list(s2)
 
           # labels
-          labels = df_split.loc[:, 'label'].values
+          labels = df_split.loc[:, 'labels'].values
           labels = list(labels)
 
         # print("LABELS")
@@ -45,7 +45,7 @@ class AnomalyReader(object):
           df_split = pd.read_csv(os.path.join(self.dataset_folder, "test/pairs_test.tsv"), sep='\t')
 
           # Any test observations from test set
-          s1 = df_split.loc[:,'message_cleaned'].values
+          s1 = df_split.loc[:,'txt'].values
           s1 = list(s1)
 
           # reference Normal
