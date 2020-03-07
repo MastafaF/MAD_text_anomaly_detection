@@ -26,7 +26,7 @@ class AnomalyDataset(Dataset):
     def __init__(self, file_relative_path, train_size = 0.5, test_size = 0.5):
         # Data loading
         # We expect a tsv file here with columns : txt labels
-        df = pd.read_csv(DATA_PATH + file_relative_path, sep='\t') # The tsv file should have an index that has been reset
+        df = pd.read_csv(DATA_PATH + file_relative_path, sep = '\t') # The tsv file should have an index that has been reset
         df = df.reset_index(drop = True)
         X = df.loc[:, 'txt']
         Y = df.loc[:, 'labels']
@@ -41,7 +41,7 @@ class AnomalyDataset(Dataset):
         self.int2label = {"normal": 1, "anomaly": 0}
         self.train_size = train_size
         self.test_size = test_size
-        self.split = [0.5, 0.5] # [train_ratio, test_ratio]
+        self.split = [self.train_size, self.test_size] # [train_ratio, test_ratio]
 
     def __getitem__(self, index):
         return self.X[index], self.Y[index]
