@@ -80,7 +80,7 @@ def get_pairs(df_normal, df_anomaly, N_pairs_normal):
     # Concatenate both dataframe
     df_concat = pd.concat([df_merge_1, df_merge_2], axis=0)
     df_concat = df_concat.sample(frac=1)
-    print("Fraction of normal data {}%".format((1 / k) * 100))
+    print("Fraction of normal data used for building training pairs {}%".format((1 / k) * 100))
     # print(df_concat.sample(2))
     return df_concat
 
