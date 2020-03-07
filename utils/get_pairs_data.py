@@ -19,7 +19,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Evaluating Siamese BERT on extremely-skewed dataset. ')
 
 parser.add_argument('--nb_reference', type=int, default=1,
-    help='Strategy used to compare test set with N reference normal observations. We strategy'
+    help='Strategy used to compare test set with N reference normal observations. N_ref'
          'in {1,3} ')
 parser.add_argument('--nb_pairs_normal', type=int, default=1e3,
     help='Number of pairs of Normal Class used for comparison in the training set ')
