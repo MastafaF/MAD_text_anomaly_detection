@@ -64,7 +64,7 @@ def get_pairs(df_normal, df_anomaly, N_pairs_normal):
     df_fraction_normal['key'] = 1
     df_merge_2 = pd.merge(df_fraction_normal, df_fraction_normal, on='key').drop('key', axis=1)
     df_merge_2.drop('label_normal_y', axis=1, inplace=True)
-    df_merge_2.rename(columns={'label_normal_x': 'label'}, inplace=True)
+    df_merge_2.rename(columns={'label_normal_x': 'labels'}, inplace=True)
 
     print(df_merge_2.columns)
     # df_merge_1 : normal, anomaly
@@ -75,7 +75,7 @@ def get_pairs(df_normal, df_anomaly, N_pairs_normal):
     df_merge_1 = pd.merge(df_fraction_normal, df_anomaly, on='key').drop('key', axis=1)
     # For a pair (normal, anomaly) the label that we give is the one from anomaly ie 1
     df_merge_1.drop('label_normal', axis=1, inplace=True)
-    df_merge_1.rename(columns={'label_anomaly': 'label'}, inplace=True)
+    df_merge_1.rename(columns={'label_anomaly': 'labels'}, inplace=True)
 
     # Concatenate both dataframe
     df_concat = pd.concat([df_merge_1, df_merge_2], axis=0)
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     df_train, df_test, storage_indices = dataset.get_train_test_data(SPLIT_ARR)
 
     print("Storing train and test indices for reproduction")
-    with open(DATA_PATH + "train_test_indices", 'wb') as f:
+    with open(DATA_PATH + "train_test_indices.dic", 'wb') as f:
         pickle.dump(storage_indices, f)
 
 
@@ -255,4 +255,3 @@ if __name__ == "__main__":
     df_test_expand['reference_normal'] = ref_arr_tot
     df_test_expand.drop("Unnamed: 0", axis=1, inplace=True)
     df_test_expand.to_csv(DATA_PATH + "/test/pairs_test.tsv", sep="\t")
-

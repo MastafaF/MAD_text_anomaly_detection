@@ -14,10 +14,10 @@ from datetime import datetime
 import sys
 import os
 sys.path.append("./")
-sys.path.append("./utils")
+sys.path.append("../utils") # use environment variable
 
-from utils.EmbeddingSimilarityEvaluator import EmbeddingSimilarityEvaluatorNew
-from SPAM_Reader import AnomalyReader
+from EmbeddingSimilarityEvaluator import EmbeddingSimilarityEvaluatorNew
+from Anomaly_Reader import AnomalyReader
 import pandas as pd
 import numpy as np
 import pickle
@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser(description='Evaluating Siamese BERT on extreme
 
 parser.add_argument('--nb_reference', type=int, default=1,
     help='Strategy used to compare test set with N reference normal observations. We strategy'
-         'in {1,3} ')
+        'in {1,3} ')
 
 parser.add_argument('--epochs_train', type=int, default=1,
     help='Number of epochs to train the model ')
@@ -44,6 +44,7 @@ NB_EPOCHS = args.epochs_train
 assert os.environ.get('MAD'), 'Please set the environment variable MAD'
 MAD = os.environ['MAD']
 DATA_PATH = MAD + "/data/"
+OUT_PATH = MAD + "/output/"
 sys.path.append(MAD + '/data/')
 
 
@@ -56,15 +57,14 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 #### /print debug information to stdout
 
 # Read the dataset
-# @TODO: load model corresponding to CamemBERT
 model_name = 'bert-base-uncased'
 batch_size = 32
 # Data in French from Flaubert github
-parent_data_folder = './data/'
+parent_data_folder = DATA_PATH
 anomaly_reader = AnomalyReader(parent_data_folder)  # after
 # sts_reader = STSDataReader('../datasets/stsbenchmark')
 train_num_labels = anomaly_reader.get_num_labels()
-model_save_path = 'output/train_' + model_name + '-' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+model_save_path = OUT_PATH + 'train_' + model_name + '-' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
 
@@ -77,9 +77,9 @@ print(type(word_embedding_model))
 #########################################################################
 # Apply mean pooling to get one fixed sized sentence vector
 pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
-                               pooling_mode_mean_tokens=True,
-                               pooling_mode_cls_token=False,
-                               pooling_mode_max_tokens=False)
+                              pooling_mode_mean_tokens=True,
+                              pooling_mode_cls_token=False,
+                              pooling_mode_max_tokens=False)
 
 model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
@@ -137,18 +137,7 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
 # Load the stored model and evaluate its performance on test data
 #
 ##############################################################################
-import sys
-sys.path.append("./utils")
-from EmbeddingSimilarityEvaluator import EmbeddingSimilarityEvaluatorNew
-from Anomaly_Reader import anomalyReader
-
-# from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
-# from anomaly_Reader import *
-from sentence_transformers import SentencesDataset, LoggingHandler, SentenceTransformer
-from torch.utils.data import DataLoader
-
-parent_data_folder = './data/'
-anomaly_reader = AnomalyReader(parent_data_folder)  # after
+anomaly_reader = AnomalyReader(DATA_PATH)  # after
 
 batch_size = 32
 
@@ -175,14 +164,14 @@ def threshold(x):
     else:
         return 1
 
-file_indices_train_test = DATA_PATH + "/storage_indices_train_test.dic"
+file_indices_train_test = DATA_PATH + "train_test_indices.dic"
 
 labels_pred = [threshold(dot_product) for sublist in labels for dot_product in
-               sublist]  # if positive value, they are similar, if negative they are dissimilar
+              sublist]  # if positive value, they are similar, if negative they are dissimilar
 
 with open(file_indices_train_test, "rb") as f:
     storage_indices = pickle.load(f)
-df = pd.read_csv(DATA_PATH + "/df.csv")
+df = pd.read_csv(DATA_PATH + "SPAM/" + "df.tsv", sep='\t')
 df_test = df[df.index.isin(storage_indices['test'])]
 df_test = df_test.loc[:, ["txt", "labels"]]
 
@@ -190,7 +179,7 @@ df_test = df_test.loc[:, ["txt", "labels"]]
 # From df_test_expand
 # IMPORTANT: we need to keep the index of the observations for the group by
 # So we specify index_col parameter when read_csv is called
-df_test_expand = pd.read_csv(DATA_PATH + "/test/pairs_test.tsv", sep = "\t", index_col = [0])
+df_test_expand = pd.read_csv(DATA_PATH + "test/pairs_test.tsv", sep = "\t", index_col = [0])
 df_test_expand['labels_pred'] = labels_pred
 
 
@@ -232,7 +221,7 @@ target_names = ['normal', 'anomaly']
 classification_report_df = classification_report(df_test.labels, df_res.labels_pred, target_names=target_names)
 print(classification_report_df)
 
-classification_report_df.to_csv("./output/classification_report_{}_ref.tsv".format(NB_REFERENCE_NORMAL), sep = "\t")
+# classification_report_df.to_csv(OUT_PATH + "classification_report_{}_ref.tsv".format(NB_REFERENCE_NORMAL), sep = "\t")
 
 # if NB_REFERENCE_NORMAL == 1:
 #     labels_pred = [threshold(dot_product) for sublist in labels for dot_product in
