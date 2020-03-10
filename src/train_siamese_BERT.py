@@ -77,22 +77,25 @@ model_save_path = OUT_PATH + 'train_' + model_name + '-' + datetime.now().strfti
 
 
 
-# Use BERT for mapping tokens to embeddings
-word_embedding_model = models.BERT(model_name)
-print(type(word_embedding_model))
+if not IS_MULTILINGUAL:
+  # Use BERT for mapping tokens to embeddings
+  word_embedding_model = models.BERT(model_name)
+
 
 #####################################################################
 ######### Focus on transfer learning on French NLI dataset #############
 #########################################################################
 # Apply mean pooling to get one fixed sized sentence vector
-pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
-                              pooling_mode_mean_tokens=True,
-                              pooling_mode_cls_token=False,
-                              pooling_mode_max_tokens=False)
 
-model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
+if not IS_MULTILINGUAL: # monolingual
+  pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
+                                pooling_mode_mean_tokens=True,
+                                pooling_mode_cls_token=False,
+                                pooling_mode_max_tokens=False)
+  model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
-
+else:  # multilingual
+    model = SentenceTransformer(model_name)
 # Convert the dataset to a DataLoader ready for training
 # logging.info("Read AllNLI train dataset")
 # train_data = SentencesDataset(nli_reader.get_examples('train.gz'), model=model)
@@ -228,7 +231,7 @@ def get_most_common_labels_to_df(df_comparisons):
 df_res = get_most_common_labels_to_df(df_test_expand)
 # classification report with sklearn comparing labels and df_test.is_spam
 from sklearn.metrics import classification_report
-target_names = ['normal', 'anomaly']
+target_names = ['anomaly', 'normal']
 classification_report_df = classification_report(df_test.labels, df_res.labels_pred, target_names=target_names)
 print(classification_report_df)
 
