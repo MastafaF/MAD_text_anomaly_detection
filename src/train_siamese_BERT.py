@@ -35,9 +35,13 @@ parser.add_argument('--nb_reference', type=int, default=1,
 parser.add_argument('--epochs_train', type=int, default=1,
     help='Number of epochs to train the model ')
 
+parser.add_argument('--is_multilingual', type=bool, default=False,
+                    help = 'Set to True if you want a multilingual setting.')
+
 args = parser.parse_args()
 NB_REFERENCE_NORMAL = args.nb_reference
 NB_EPOCHS = args.epochs_train
+IS_MULTILINGUAL = args.is_multilingual
 
 
 # export MAD='/Users/foufamastafa/Documents/master_thesis_KTH/MAD_anomaly_detection'
@@ -56,8 +60,13 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     handlers=[LoggingHandler()])
 #### /print debug information to stdout
 
+
+
 # Read the dataset
-model_name = 'bert-base-uncased'
+if IS_MULTILINGUAL:
+    model_name = 'distiluse-base-multilingual-cased'
+else:
+    model_name = 'bert-base-uncased'
 batch_size = 32
 # Data in French from Flaubert github
 parent_data_folder = DATA_PATH
@@ -160,9 +169,11 @@ et label_true
 
 def threshold(x):
     if x > 0:
-        return 0
+        # Then sentence_1 and sentence_reference_normal are SIMILAR
+        return 1 # It is a normal class
     else:
-        return 1
+        # Then sentence_1 and sentence_reference_normal are DIFFERENT
+        return 0 # It is an anomaly
 
 file_indices_train_test = DATA_PATH + "train_test_indices.dic"
 
@@ -171,7 +182,7 @@ labels_pred = [threshold(dot_product) for sublist in labels for dot_product in
 
 with open(file_indices_train_test, "rb") as f:
     storage_indices = pickle.load(f)
-df = pd.read_csv(DATA_PATH + "SPAM/" + "df.tsv", sep='\t')
+df = pd.read_csv(DATA_PATH + "df.tsv", sep='\t')
 df_test = df[df.index.isin(storage_indices['test'])]
 df_test = df_test.loc[:, ["txt", "labels"]]
 
