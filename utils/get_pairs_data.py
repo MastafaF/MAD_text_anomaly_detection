@@ -4,6 +4,7 @@ import os
 import sys
 import numpy as np
 import pickle
+import pathlib
 
 # export MAD='/Users/foufamastafa/Documents/master_thesis_KTH/MAD_anomaly_detection'
 assert os.environ.get('MAD'), 'Please set the environment variable MAD'
@@ -143,6 +144,12 @@ if __name__ == "__main__":
     df_concat_train = get_pairs(df_normal_train, df_anomaly_train, N_pairs_normal=N_pairs_normal)
 
     # 3/ Save them in data directory
+    # Build directory for train and test data
+
+    # If directory does not exist then create it
+    pathlib.Path(DATA_PATH + 'train/').mkdir(parents=True, exist_ok=True)
+    pathlib.Path(DATA_PATH + 'test/').mkdir(parents=True, exist_ok=True)
+
     df_concat_train.to_csv(MAD + "/data/train/pairs_train.tsv", sep='\t', index=False)
 
     # For test set
