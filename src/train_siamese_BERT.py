@@ -235,14 +235,87 @@ target_names = ['anomaly', 'normal']
 classification_report_df = classification_report(df_test.labels, df_res.labels_pred, target_names=target_names)
 print(classification_report_df)
 
-# classification_report_df.to_csv(OUT_PATH + "classification_report_{}_ref.tsv".format(NB_REFERENCE_NORMAL), sep = "\t")
-
-# if NB_REFERENCE_NORMAL == 1:
-#     labels_pred = [threshold(dot_product) for sublist in labels for dot_product in
-#                    sublist]  # if positive value, they are similar, if negative they are dissimilar
-#     df_test = pd.read_csv(DATA_PATH + "/test/pairs_test.tsv", sep = "\t" )
+##############################################################################
 #
-#     target_names = ['normal', 'anomaly']
-#     classification_report_df = classification_report(df_test.labels, labels_pred, target_names=target_names)
-#     print(classification_report_df)
-#     classification_report_df.to_csv("./output/classification_report_1ref.tsv", sep="\t")
+# Load the stored model and evaluate its performance on Zero-Shot Data if Zero-Shot Learning
+#
+##############################################################################
+#@TODO: add Zero-Shot parameters
+
+ZERO_SHOT_LEARNING = True # Add it as additional parameter
+DATA_PATH_MULTILINGUAL = 'multilingual/harry_potter.tok.ru'
+
+if ZERO_SHOT_LEARNING:
+    # 1/ Get data in multilingual folder
+    with open(os.path.join(DATA_PATH, DATA_PATH_MULTILINGUAL),
+              mode="rt", encoding="utf-8") as f:
+        s_normal = [line.rstrip() for line in f if len(line.split()) > 5]  # filter out on the fly short sentences
+
+
+    # @TODO: in the future, add also labels txt file in multilingual folder
+    labels_arr = [1 for _ in range(len(s_normal))] # Can be changed if multilingual data is not from normal class
+
+    # Build a test dataframe with only Russian harry potter which we expect to be predicted as Normal
+    df_test_multilingual = pd.DataFrame()
+    df_test_multilingual['txt'] = s_normal
+    df_test_multilingual['labels'] = labels_arr
+
+    # 2/ # Build NLI-dataset with N_ref comparisons
+    # @TODO: Take your reference normal observations from Training set in the future
+    # We take our representant from test data ==> Can be changed in the future
+    df_test_sample_normal = df_test.groupby('labels').get_group(1).head(
+            NB_REFERENCE_NORMAL).loc[:, 'txt']
+    arr_normal_repr = np.array(df_test_sample_normal.values)
+    # We want [x_reference_normal_1 for _ in range(N_test_obs)] , [x_reference_normal_2 for _ in range(N_test_obs)], [x_reference_normal_3 for _ in range(N_test_obs)]
+    N_test_obs = df_test_multilingual.shape[0]
+
+
+    def expand(txt: str, shape: int):
+        """
+        Example:
+        --------------
+        Input:
+        txt = 'toto'
+        shape = 3
+        Output:
+        ['toto', 'toto', 'toto']
+        """
+        arr_txt_expand = [txt for _ in range(shape)]
+        return arr_txt_expand
+
+
+    ref_arr_tot = []
+    for txt in arr_normal_repr:
+        ref_arr_tot += expand(txt, shape=N_test_obs)
+
+    # We extend df_test 3 times : [df_test, df_test, df_test]
+    df_test_expand_multilingual = pd.concat([df_test_multilingual] * NB_REFERENCE_NORMAL)  # Keep the index intact
+    # Add a new columb called 'reference_obs_normal' with reference observations (from normal in this case)
+    df_test_expand_multilingual['reference_normal'] = ref_arr_tot
+    # df_test_expand_multilingual.drop("Unnamed: 0", axis=1, inplace=True)
+    df_test_expand_multilingual.to_csv(DATA_PATH + "/multilingual/pairs_test.tsv", sep="\t")
+
+    # Now let us test on our zero-shot data
+    anomaly_reader = AnomalyReader(DATA_PATH)  # after
+
+    batch_size = 32
+    model = SentenceTransformer(model_save_path)
+    test_data = SentencesDataset(examples=anomaly_reader.get_examples("zero_shot"), model=model)
+    test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
+    evaluator = EmbeddingSimilarityEvaluatorNew(test_dataloader)
+    similarity, labels = model.evaluate(evaluator)
+
+    labels_pred = [threshold(dot_product) for sublist in labels for dot_product in
+                   sublist]
+
+    df_test_expand_multilingual['labels_pred'] = labels_pred
+
+    # Getting most common labels in df_res
+    df_res = get_most_common_labels_to_df(df_test_expand_multilingual)
+    # classification report with sklearn comparing labels and df_test.is_spam
+
+    target_names = ['anomaly', 'normal']
+    classification_report_df = classification_report([1 for _ in range(df_res.shape[0])], df_res.labels_pred,
+                                                     target_names=target_names)
+    print("Zero shot learning -- Classification report")
+    print(classification_report_df)

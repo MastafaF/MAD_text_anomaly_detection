@@ -41,7 +41,6 @@ class AnomalyReader(object):
         # print(type(labels))
         # print(labels[:10])
         if split == "test":
-          # Open dataframe: @TODO: change name
           df_split = pd.read_csv(os.path.join(self.dataset_folder, "test/pairs_test.tsv"), sep='\t')
 
           # Any test observations from test set
@@ -56,6 +55,20 @@ class AnomalyReader(object):
           labels = df_split.loc[:, 'labels'].values
           labels = list(labels)
 
+        if split == 'zero_shot_test':
+            df_split = pd.read_csv(os.path.join(self.dataset_folder, "zero_shot/pairs_test.tsv"), sep='\t')
+
+            # Any test observations from test set
+            s1 = df_split.loc[:, 'txt'].values
+            s1 = list(s1)
+
+            # reference Normal
+            s2 = df_split.loc[:, 'reference_normal'].values
+            s2 = list(s2)
+
+            # labels
+            labels = df_split.loc[:, 'labels'].values
+            labels = list(labels)
 
         examples = []
         id = 0
