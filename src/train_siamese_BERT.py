@@ -293,7 +293,7 @@ if ZERO_SHOT_LEARNING:
     # Add a new columb called 'reference_obs_normal' with reference observations (from normal in this case)
     df_test_expand_multilingual['reference_normal'] = ref_arr_tot
     # df_test_expand_multilingual.drop("Unnamed: 0", axis=1, inplace=True)
-    df_test_expand_multilingual.to_csv(DATA_PATH + "/multilingual/pairs_test.tsv", sep="\t")
+    df_test_expand_multilingual.to_csv(DATA_PATH + "/zero_shot/pairs_test.tsv", sep="\t")
 
     # Now let us test on our zero-shot data
     anomaly_reader = AnomalyReader(DATA_PATH)  # after
