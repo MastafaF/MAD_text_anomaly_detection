@@ -38,11 +38,14 @@ parser.add_argument('--epochs_train', type=int, default=1,
 parser.add_argument('--is_multilingual', type=bool, default=False,
                     help = 'Set to True if you want a multilingual setting.')
 
+parser.add_argument('--batch_size', type=int, default=32,
+                    help = 'Batch size. Suggested in {16, 32}')
+
 args = parser.parse_args()
 NB_REFERENCE_NORMAL = args.nb_reference
 NB_EPOCHS = args.epochs_train
 IS_MULTILINGUAL = args.is_multilingual
-
+BATCH_SIZE = args.batch_size
 
 # export MAD='/Users/foufamastafa/Documents/master_thesis_KTH/MAD_anomaly_detection'
 assert os.environ.get('MAD'), 'Please set the environment variable MAD'
@@ -67,7 +70,7 @@ if IS_MULTILINGUAL:
     model_name = 'distiluse-base-multilingual-cased'
 else:
     model_name = 'bert-base-uncased'
-batch_size = 32
+batch_size = BATCH_SIZE # default is 32
 # Data in French from Flaubert github
 parent_data_folder = DATA_PATH
 anomaly_reader = AnomalyReader(parent_data_folder)  # after
@@ -151,7 +154,7 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
 ##############################################################################
 anomaly_reader = AnomalyReader(DATA_PATH)  # after
 
-batch_size = 32
+batch_size = BATCH_SIZE
 
 model = SentenceTransformer(model_save_path)
 test_data = SentencesDataset(examples=anomaly_reader.get_examples("test"), model=model)
@@ -298,7 +301,7 @@ if ZERO_SHOT_LEARNING:
     # Now let us test on our zero-shot data
     anomaly_reader = AnomalyReader(DATA_PATH)  # after
 
-    batch_size = 32
+    batch_size = BATCH_SIZE
     model = SentenceTransformer(model_save_path)
     test_data = SentencesDataset(examples=anomaly_reader.get_examples("zero_shot"), model=model)
     test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
