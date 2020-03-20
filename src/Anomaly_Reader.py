@@ -55,7 +55,7 @@ class AnomalyReader(object):
           labels = df_split.loc[:, 'labels'].values
           labels = list(labels)
 
-        if split == 'zero_shot_test':
+        if split == 'zero_shot':
             df_split = pd.read_csv(os.path.join(self.dataset_folder, "zero_shot/pairs_test.tsv"), sep='\t')
 
             # Any test observations from test set
