@@ -293,7 +293,7 @@ if ZERO_SHOT_LEARNING:
 
     # We extend df_test 3 times : [df_test, df_test, df_test]
     df_test_expand_multilingual = pd.concat([df_test_multilingual] * NB_REFERENCE_NORMAL)  # Keep the index intact
-    # Add a new columb called 'reference_obs_normal' with reference observations (from normal in this case)
+    # Add a new column called 'reference_obs_normal' with reference observations (from normal in this case)
     df_test_expand_multilingual['reference_normal'] = ref_arr_tot
     # df_test_expand_multilingual.drop("Unnamed: 0", axis=1, inplace=True)
     df_test_expand_multilingual.to_csv(DATA_PATH + "/zero_shot/pairs_test.tsv", sep="\t")
